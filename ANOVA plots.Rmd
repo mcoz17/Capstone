@@ -1,0 +1,91 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+df = wine
+```
+
+```{r}
+colnames(df)
+```
+
+#Preparing Data
+```{r}
+data = partition(df, split_ratio = 0.7)
+data[[1]]
+wine_train = data[[2]]
+wine_test = data[[3]]
+```
+```{r}
+wine_means = colMeans(wine_train)    #Get means from each column
+wine_sdevs = apply(wine_train, 2, sd)  #Get standard deviations
+
+wine_train_scaled = (wine_train - wine_means[col(wine_train)]) / (wine_sdevs[col(wine_train)])
+
+wine_test_scaled = (wine_test - wine_means[col(wine_test)]) / (wine_sdevs[col(wine_test)])
+```
+
+
+#Multiple Linear Regression
+```{r}
+lr_model = lm(quality ~ ., data = wine_train_scaled)
+
+y_pred_train = predict(lr_model, newdata = wine_train_scaled)
+y_pred_test = predict(lr_model, newdata = wine_test_scaled)
+coef(lr_model)
+coefficients <- summary(lr_model)$coefficients
+
+
+```
+
+#Feature Importance
+```{r}
+library(ggplot2)
+
+# Create a dataframe for plotting
+importance_df <- data.frame(
+  Feature = rownames(coefficients),
+  Coefficient = coefficients[, "Estimate"]
+)
+
+# Create the feature importance plot
+ggplot(importance_df, aes(x = reorder(Feature, Coefficient), y = Coefficient)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +
+  coord_flip() +
+  labs(x = "Feature", y = "Coefficient", title = "Feature Importance Plot") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 8))
+
+```
+
+
+
+
+#Boxplots for the strongest features
+```{r}
+# Boxplot for Alcohol
+ggplot(df, aes(x = factor(quality), y = `alcohol`, fill = factor(quality))) +
+  geom_boxplot() +
+  labs(x = "Quality", y = "alcohol") +
+  ggtitle("Boxplot of Alcohol by Wine Quality")
+```
+
+```{r}
+# Boxplot for Volatile Acidity
+ggplot(df, aes(x = factor(quality), y = `volatile acidity`, fill = factor(quality))) +
+  geom_boxplot() +
+  labs(x = "Quality", y = "volatile acidity") +
+  ggtitle("Boxplot of Volatile Acidity by Wine Quality")
+```
+
+```{r}
+# Boxplot for Sulphates
+ggplot(df, aes(x = factor(quality), y = `sulphates`, fill = factor(quality))) +
+  geom_boxplot() +
+  labs(x = "Quality", y = "sulphates") +
+  ggtitle("Boxplot of Sulphates by Wine Quality")
+```
+
+
+
